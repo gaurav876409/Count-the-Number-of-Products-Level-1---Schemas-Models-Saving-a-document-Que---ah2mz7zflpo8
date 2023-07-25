@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-var products   =require("../models/product.js");
+var products = require("../models/product.js");
 
 // Import routes
 
@@ -24,14 +24,43 @@ app.use(express.json());
 
 // Complete this Route which will return the count of number of products in the range/
 
-app.get("/",async function(req,res){
+app.get("/", async function (req, res) {
 
     var count = 0;
 
     //Write you code here
     //update count variable 
+    try {
+        const category = req.query.category;
+        const range = req.query.range;
 
-    res.send(JSON.stringify(count));
+        // Create a query object to filter products based on the given category and price range
+        const query = {};
+        if (category) {
+            query.category = category;
+        }
+
+        if (range) {
+            const priceRange = range.split("-");
+            if (priceRange.length === 2) {
+                query.price = {
+                    $gte: parseInt(priceRange[0]), // Greater than or equal to X
+                    $lte: parseInt(priceRange[1]), // Less than or equal to Y
+                };
+            } else {
+                query.price = {
+                    $gte: parseInt(priceRange[0]), // Greater than or equal to X
+                };
+            }
+        }
+
+        // Get the count of products that match the query
+        const count = await products.countDocuments(query);
+
+        res.send(JSON.stringify(count));
+    } catch (err) {
+        res.status(500).send("Internal Server Error");
+    }
 
 });
 
